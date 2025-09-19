@@ -1,8 +1,7 @@
 /*
-	heap
-	This question requires you to implement a binary heap function
+    heap
+    This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -14,6 +13,7 @@ where
     count: usize,
     items: Vec<T>,
     comparator: fn(&T, &T) -> bool,
+    cur: usize,
 }
 
 impl<T> Heap<T>
@@ -25,6 +25,7 @@ where
             count: 0,
             items: vec![T::default()],
             comparator,
+            cur: 0,
         }
     }
 
@@ -37,7 +38,18 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.count += 1;
+        let mut cur = self.count;
+        if self.items.len() == self.count {
+            self.items.push(value);
+        } else {
+            self.items[cur] = value;
+        }
+
+        while cur > 1 && (self.comparator)(&self.items[cur], &self.items[cur / 2]) {
+            self.items.swap(cur, cur / 2);
+            cur /= 2;
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +69,17 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let (left, right) = (self.left_child_idx(idx), self.right_child_idx(idx));
+        if self.children_present(right) {
+            if (self.comparator)(&self.items[left], &self.items[right]) {
+                return left;
+            } else {
+                return right;
+            }
+        } else if self.children_present(left) {
+            return left;
+        }
+        0
     }
 }
 
@@ -79,13 +100,26 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default + Clone,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
         //TODO
-		None
+        if self.count == 0 {
+            return None;
+        }
+        let result = self.items[1].clone();
+        self.items[1] = self.items[self.count].clone();
+        let mut cur = 1;
+        let mut child = self.smallest_child_idx(cur);
+        while child != 0 {
+            self.items.swap(cur, child);
+            cur = child;
+            child = self.smallest_child_idx(cur);
+        }
+        self.count -= 1;
+        Some(result)
     }
 }
 
@@ -152,3 +186,4 @@ mod tests {
         assert_eq!(heap.next(), Some(2));
     }
 }
+
